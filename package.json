@@ -1,0 +1,23 @@
+{
+  "name": "steadystake-contracts",
+  "version": "1.0.0",
+  "description": "SteadyStake - Base-native DCA vault contracts",
+  "scripts": {
+    "sync-addresses": "node scripts/sync-deployed-addresses.js",
+    "sync-addresses:base-sepolia": "node scripts/sync-base-sepolia.js",
+    "build": "forge build",
+    "test": "forge test",
+    "test:coverage": "forge coverage",
+    "test:gas": "forge snapshot --snap snapshots/.gas-snapshot",
+    "deploy:base-sepolia": "forge script script/Deploy.s.sol --rpc-url base_sepolia --broadcast",
+    "deploy:base": "forge script script/Deploy.s.sol --rpc-url base --broadcast",
+    "qubic-testnet": "node -e \"console.log('See QUBIC_TESTNET.md for Qubic testnet faucet and test funds.')\"",
+    "verify": "forge verify-contract",
+    "lint": "solhint 'src/**/*.sol'",
+    "format": "forge fmt"
+  },
+  "devDependencies": {
+    "solhint": "^4.0.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,45 @@
+﻿{
+  "language": "Solidity",
+  "sources": {
+    "src/SwapHelper.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.19;\n\ninterface IERC20 {\n    function transfer(address to, uint256 amount) external returns (bool);\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\n    function approve(address spender, uint256 amount) external returns (bool);\n    function balanceOf(address account) external view returns (uint256);\n    function decimals() external view returns (uint8);\n}\n\n/**\n * @title IZeroExProtocol\n * @notice Interface for 0x Protocol aggregator on Base\n */\ninterface IZeroExProtocol {\n    struct Quote {\n        address to;\n        bytes data;\n        uint256 value;\n        uint256 gas;\n        string gasPrice;\n    }\n    \n    function fillQuote(\n        bytes calldata swapData\n    ) external payable returns (uint256 returnAmount);\n}\n\n/**\n * @title SwapHelper\n * @notice Helper for executing swaps via 0x Protocol\n * @dev Abstracts 0x API integration for DCA swaps\n */\ncontract SwapHelper {\n    // 0x Protocol Router on Base\n    address constant ZERO_EX_ROUTER = 0xDef1C0ded9bEf7C1100000000000000000000000;\n    \n    IERC20 constant USDC = IERC20(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913);\n    \n    // ============ Events ============\n    event SwapExecuted(\n        address indexed tokenIn,\n        address indexed tokenOut,\n        uint256 amountIn,\n        uint256 amountOut\n    );\n    \n    // ============ Functions ============\n    /**\n     * @notice Execute a swap via 0x Protocol\n     * @param tokenOut Output token\n     * @param amountIn USDC amount in\n     * @param minAmountOut Minimum output amount\n     * @param swapData Encoded 0x swap data from API\n     */\n    function executeSwap(\n        address tokenOut,\n        uint256 amountIn,\n        uint256 minAmountOut,\n        bytes calldata swapData\n    ) external returns (uint256 amountOut) {\n        // Approve 0x router\n        USDC.approve(ZERO_EX_ROUTER, amountIn);\n        \n        // Execute swap via 0x router\n        // 0x returns the amount received in the return data\n        (bool success, bytes memory result) = ZERO_EX_ROUTER.call(swapData);\n        require(success, \"0x swap failed\");\n        \n        // 0x returns filled amount in the result\n        amountOut = abi.decode(result, (uint256));\n        require(amountOut >= minAmountOut, \"Insufficient output amount\");\n        \n        emit SwapExecuted(address(USDC), tokenOut, amountIn, amountOut);\n    }\n\n    /**\n     * @notice Decode 0x swap data\n     * @param swapData Raw 0x swap call data from API\n     */\n    function decodeSwapData(bytes calldata swapData)\n        external\n        pure\n        returns (\n            address tokenOut,\n            uint256 minAmountOut\n        )\n    {\n        // 0x swap data is a raw call to the router\n        // Decoding depends on the specific quote response\n        // For production, parse the API response before encoding\n        tokenOut = address(0);\n        minAmountOut = 0;\n    }\n}\n\n/**\n * @title MockSwapRouter\n * @notice Mock swap router for testing (1:1 swap).\n * Pass address(0) for default Base USDC; pass a token address for tests.\n */\ncontract MockSwapRouter {\n    address constant DEFAULT_USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;\n    IERC20 public usdc;\n\n    mapping(address => uint256) public tokenPrices; // Price relative to USDC (6 decimals)\n\n    event MockSwapExecuted(\n        address indexed tokenIn,\n        address indexed tokenOut,\n        uint256 amountIn,\n        uint256 amountOut\n    );\n\n    constructor(address _usdc) {\n        usdc = IERC20(_usdc == address(0) ? DEFAULT_USDC : _usdc);\n        tokenPrices[address(usdc)] = 1e6;\n    }\n\n    function setTokenPrice(address token, uint256 price) external {\n        tokenPrices[token] = price;\n    }\n\n    function swap(\n        address tokenOut,\n        uint256 amountIn,\n        uint256 minAmountOut,\n        address recipient\n    ) external returns (uint256 amountOut) {\n        require(amountIn > 0, \"Invalid amount\");\n\n        usdc.transferFrom(msg.sender, address(this), amountIn);\n\n        uint8 decimals = IERC20Extended(tokenOut).decimals();\n        if (decimals < 6) {\n            amountOut = (amountIn / 10 ** (6 - decimals));\n        } else if (decimals > 6) {\n            amountOut = amountIn * 10 ** (decimals - 6);\n        } else {\n            amountOut = amountIn;\n        }\n\n        require(amountOut >= minAmountOut, \"Insufficient output\");\n\n        require(\n            IERC20Extended(tokenOut).transfer(recipient, amountOut),\n            \"Transfer failed\"\n        );\n\n        emit MockSwapExecuted(address(usdc), tokenOut, amountIn, amountOut);\n        return amountOut;\n    }\n}\n\ninterface IERC20Extended is IERC20 {\n    function decimals() external view returns (uint8);\n}\n\n/**\n * @title IZeroExAdapter\n * @notice Adapter for DCAVault to execute 0x swaps and send output to recipient\n */\ninterface IZeroExAdapter {\n    function executeSwapWithData(\n        address tokenOut,\n        uint256 amountIn,\n        uint256 minAmountOut,\n        address recipient,\n        bytes calldata swapData\n    ) external returns (uint256 amountOut);\n}\n\n/**\n * @title ZeroExAdapter\n * @notice Mainnet swap adapter: implements ISwapRouter for DCAVault and 0x execution with recipient.\n * @dev Chain-agnostic: pass chain-specific USDC and 0x router in constructor (Base, BNB, etc.).\n */\ncontract ZeroExAdapter {\n    address public immutable ZERO_EX_ROUTER;\n    address public immutable USDC;\n\n    constructor(address _usdc, address _zeroExRouter) {\n        require(_usdc != address(0), \"Invalid USDC\");\n        require(_zeroExRouter != address(0), \"Invalid 0x router\");\n        USDC = _usdc;\n        ZERO_EX_ROUTER = _zeroExRouter;\n    }\n\n    event SwapExecuted(\n        address indexed tokenIn,\n        address indexed tokenOut,\n        uint256 amountIn,\n        uint256 amountOut,\n        address indexed recipient\n    );\n\n    /**\n     * @notice Execute 0x swap and send output tokens to recipient\n     * @param tokenOut Output token address\n     * @param amountIn USDC amount (6 decimals)\n     * @param minAmountOut Minimum output amount\n     * @param recipient Address to receive output tokens\n     * @param swapData Encoded 0x swap calldata from API\n     */\n    function executeSwapWithData(\n        address tokenOut,\n        uint256 amountIn,\n        uint256 minAmountOut,\n        address recipient,\n        bytes calldata swapData\n    ) external returns (uint256 amountOut) {\n        require(swapData.length > 0, \"Empty swap data\");\n        require(recipient != address(0), \"Invalid recipient\");\n\n        IERC20(USDC).transferFrom(msg.sender, address(this), amountIn);\n        IERC20(USDC).approve(ZERO_EX_ROUTER, amountIn);\n\n        (bool success, bytes memory result) = ZERO_EX_ROUTER.call(swapData);\n        require(success, \"0x swap failed\");\n\n        amountOut = abi.decode(result, (uint256));\n        require(amountOut >= minAmountOut, \"Insufficient output amount\");\n\n        require(\n            IERC20(tokenOut).transfer(recipient, amountOut),\n            \"Transfer to recipient failed\"\n        );\n\n        emit SwapExecuted(USDC, tokenOut, amountIn, amountOut, recipient);\n    }\n\n    /**\n     * @notice ISwapRouter.swap - not used on mainnet; use executeSwapWithData with 0x quote\n     */\n    function swap(\n        address /* tokenOut */,\n        uint256 /* amountIn */,\n        uint256 /* minAmountOut */,\n        address /* recipient */\n    ) external pure returns (uint256) {\n        revert(\"Use executeSwapWithData with 0x quote\");\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/",
+      "@openzeppelin/=lib/openzeppelin-contracts/",
+      "openzeppelin-contracts/=lib/openzeppelin-contracts/"
+    ],
+    "optimizer": { "enabled": false, "runs": 200 },
+    "modelChecker": {
+      "engine": "bmc",
+      "timeout": 10000,
+      "targets": ["assert"]
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode.object",
+          "evm.bytecode.sourceMap",
+          "evm.bytecode.linkReferences",
+          "evm.deployedBytecode.object",
+          "evm.deployedBytecode.sourceMap",
+          "evm.deployedBytecode.linkReferences",
+          "evm.deployedBytecode.immutableReferences",
+          "evm.methodIdentifiers",
+          "metadata"
+        ]
+      }
+    },
+    "evmVersion": "osaka",
+    "viaIR": false,
+    "libraries": {}
+  }
+}

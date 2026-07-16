@@ -1,0 +1,48 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "deploymentDate": "2025",
+  "contracts": {
+    "DCAVault": {
+      "address": "0xe9e2F8F23CAfbF517B6Ca077fa88E12458b670E5",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0xe9e2F8F23CAfbF517B6Ca077fa88E12458b670E5"
+    },
+    "DCAResolver": {
+      "address": "0xA24259726659A19F13Ff8b07A756D74C1c658404",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0xA24259726659A19F13Ff8b07A756D74C1c658404"
+    },
+    "MockSwapRouter": {
+      "address": "0x037Abdb1904CC2894a2Ca1d54b3E267A4B6f0d67",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0x037Abdb1904CC2894a2Ca1d54b3E267A4B6f0d67"
+    },
+    "MockUSDC": {
+      "address": "0x74C0cdB54B5bEB5fCf1073B8f1f6c583381c44D6",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0x74C0cdB54B5bEB5fCf1073B8f1f6c583381c44D6"
+    },
+    "MockAERO": {
+      "address": "0x3AF7Fc5E3305aaada45833a1C4dF6201222C489B",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0x3AF7Fc5E3305aaada45833a1C4dF6201222C489B"
+    },
+    "MockDEGEN": {
+      "address": "0x6D5c158E55339365C5456a49804973cB260076bA",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0x6D5c158E55339365C5456a49804973cB260076bA"
+    },
+    "MockCBETH": {
+      "address": "0x49DF0bb77d8F92e69A823AE1d53521306deB97ea",
+      "verified": true,
+      "explorerUrl": "https://sepolia.basescan.org/address/0x49DF0bb77d8F92e69A823AE1d53521306deB97ea"
+    }
+  },
+  "configuration": {
+    "feePercentage": "0.25%",
+    "maxFee": "5%",
+    "earlyCancelFee": "3%",
+    "earlyCancelThreshold": "50%"
+  }
+}

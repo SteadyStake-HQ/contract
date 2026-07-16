@@ -1,0 +1,47 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+cache_dir = "cache"
+script = "script"
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "openzeppelin-contracts/=lib/openzeppelin-contracts/"
+]
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.ci]
+fuzz = { runs = 10000 }
+
+# Disable BMC model checker by default (no SMT solver); enable in CI if needed
+# [profile.default.model_checker]
+# contracts = {}
+# engine = "bmc"
+# timeout = 10000
+# targets = ["assert"]
+
+[rpc_endpoints]
+base = "https://mainnet.base.org"
+base_sepolia = "https://sepolia.base.org"
+eth_sepolia = "https://rpc.sepolia.org"
+eth_sepolia_publicnode = "https://ethereum-sepolia-rpc.publicnode.com"
+bnb = "https://bsc-dataseed.binance.org"
+kava = "https://evm.kava.io"
+polygon = "https://polygon-rpc.com"
+sonic = "https://rpc.soniclabs.com"
+# Qubic testnet (non-EVM; for reference / future Qubic tooling). See contracts/QUBIC_TESTNET.md
+qubic_testnet = "https://testnet-rpc.qubic.org"
+
+[etherscan]
+base = { key = "${BASE_ETHERSCAN_KEY}" }
+base_sepolia = { key = "${BASE_ETHERSCAN_KEY}" }
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+bsc = { key = "${BSCSCAN_API_KEY}" }
+# Kava (Kavascan): Cosmostation API; key can be any non-empty string
+kava = { key = "${KAVASCAN_API_KEY}", url = "https://api.verify.mintscan.io/evm/api/0x8ae" }
+polygon = { key = "${POLYGONSCAN_API_KEY}" }
+sonic = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=146" }

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+lib/
+forge-std/
+
+# Compilation
+out/
+cache/
+.forge-snapshots/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build outputs
+dist/
+build/
+
+# Foundry
+!cache/.gitkeep
+!out/.gitkeep
+
+# Test results
+coverage/
+lcov.info
+
+# Gas snapshot
+.gas-snapshot

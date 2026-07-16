@@ -1,0 +1,29 @@
+{
+  "network": "base-mainnet",
+  "chainId": 8453,
+  "deploymentDate": "2025",
+  "contracts": {
+    "ZeroExAdapter": {
+      "address": "0x4D92ccB72bc528E3133216fF43E04ab0C28a5DC5",
+      "verified": true,
+      "explorerUrl": "https://basescan.org/address/0x4D92ccB72bc528E3133216fF43E04ab0C28a5DC5"
+    },
+    "DCAVault": {
+      "address": "0xC692F9fE5c03eB9a1db935a47067225CB988c89F",
+      "verified": true,
+      "explorerUrl": "https://basescan.org/address/0xC692F9fE5c03eB9a1db935a47067225CB988c89F"
+    },
+    "DCAResolver": {
+      "address": "0x0459F26fC754d0762b26ED0b9fa5F476455453B2",
+      "verified": true,
+      "explorerUrl": "https://basescan.org/address/0x0459F26fC754d0762b26ED0b9fa5F476455453B2"
+    }
+  },
+  "configuration": {
+    "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "feePercentage": "0.25%",
+    "maxFee": "5%",
+    "earlyCancelFee": "3%",
+    "earlyCancelThreshold": "50%"
+  }
+}
