@@ -487,10 +487,10 @@ contract DCAVaultTest is Test {
     
     function test_Pause() public {
         vault.pause();
-        
+
         vm.startPrank(user1);
         usdc.approve(address(vault), 1000e6);
-        
+
         vm.expectRevert();
         vault.createSchedule(
             address(aero),
@@ -498,7 +498,49 @@ contract DCAVaultTest is Test {
             100e6,
             1000e6
         );
-        
+
+        vm.stopPrank();
+    }
+
+    /// @dev The cap tracks the stablecoin's decimals rather than a hardcoded 1e6.
+    function test_MaxTotalDeposit_TracksStableDecimals() public view {
+        assertEq(vault.maxTotalDeposit(), 10_000_000e6, "6-decimal stable caps at 10M tokens");
+    }
+
+    /**
+     * BNB Chain settles in 18-decimal Binance-Peg USDC. Under the old `10_000_000e6` literal that
+     * cap was 1e13 base units — $0.00001 — so an ordinary deposit reverted with "Amount too large".
+     */
+    function test_CreateSchedule_18DecimalStable() public {
+        MockToken stable18 = new MockToken("Binance-Peg USD Coin", "USDC", 18);
+        MockSwapRouter router18 = new MockSwapRouter(address(stable18));
+        DCAVault vault18 = new DCAVault(address(router18), address(stable18));
+
+        assertEq(vault18.maxTotalDeposit(), 10_000_000e18, "18-decimal stable caps at 10M tokens");
+
+        stable18.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        stable18.approve(address(vault18), 1000e18);
+        // 1000 whole tokens — 1e21 base units, far above the old 1e13 ceiling.
+        vault18.createSchedule(address(aero), DCAVault.DCAFrequency.WEEKLY, 100e18, 1000e18);
+        vm.stopPrank();
+
+        (, , uint256 amountPerInterval, , uint256 totalAmount, , ) = vault18.schedules(user1, 0);
+        assertEq(amountPerInterval, 100e18);
+        assertEq(totalAmount, 1000e18);
+    }
+
+    function test_CreateSchedule_18DecimalStable_RevertAboveCap() public {
+        MockToken stable18 = new MockToken("Binance-Peg USD Coin", "USDC", 18);
+        MockSwapRouter router18 = new MockSwapRouter(address(stable18));
+        DCAVault vault18 = new DCAVault(address(router18), address(stable18));
+
+        uint256 tooMuch = 10_000_001e18;
+        stable18.mint(user1, tooMuch);
+        vm.startPrank(user1);
+        stable18.approve(address(vault18), tooMuch);
+        vm.expectRevert("Amount too large");
+        vault18.createSchedule(address(aero), DCAVault.DCAFrequency.WEEKLY, 100e18, tooMuch);
         vm.stopPrank();
     }
 }

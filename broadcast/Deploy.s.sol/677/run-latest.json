@@ -1,0 +1,20 @@
+{
+  "transactions": [
+    {
+      "contractName": "UniV2SwapAdapter",
+      "contractAddress": "0x4d92ccb72bc528e3133216ff43e04ab0c28a5dc5"
+    },
+    {
+      "contractName": "DCAVault",
+      "contractAddress": "0xc692f9fe5c03eb9a1db935a47067225cb988c89f"
+    },
+    {
+      "contractName": "DCAResolver",
+      "contractAddress": "0x0459f26fc754d0762b26ed0b9fa5f476455453b2"
+    },
+    {
+      "contractName": "GasTank",
+      "contractAddress": "0xdb561fe13a6516b31c8fcd5cb8b5a4e3fefe43a9"
+    }
+  ]
+}

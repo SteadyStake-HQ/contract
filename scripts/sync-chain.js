@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+/**
+ * Reads the latest deploy broadcast for any chain and merges the addresses into both
+ * frontend/config/deployed-addresses.json and backend/deployed-addresses.json.
+ *
+ * Usage: node scripts/sync-chain.js <chainId>
+ *
+ * This is the chain-agnostic version of sync-bot-chain.js (which only accepts 677/968).
+ * It also recognises ZeroExAdapter, which the 0x-aggregator chains (Polygon, Base, BSC) deploy.
+ */
+const fs = require("fs");
+const path = require("path");
+
+const CHAIN_ID = parseInt(process.argv[2] || "", 10);
+if (!Number.isInteger(CHAIN_ID) || CHAIN_ID <= 0) {
+  console.error("Usage: node scripts/sync-chain.js <chainId>");
+  process.exit(1);
+}
+
+const BROADCAST_DIR = path.join(__dirname, "..", "broadcast", "Deploy.s.sol", String(CHAIN_ID));
+const TARGETS = [
+  path.join(__dirname, "..", "..", "frontend", "config", "deployed-addresses.json"),
+  path.join(__dirname, "..", "..", "backend", "deployed-addresses.json"),
+];
+
+/**
+ * DCAVault.swapRouter() is a single slot filled by whichever adapter the chain's deploy script
+ * built, so all three adapter contract names map onto the one `ZeroExAdapter` JSON field.
+ */
+const NAME_TO_FIELD = {
+  DCAVault: "DCAVault",
+  DCAResolver: "DCAResolver",
+  GasTank: "GasTank",
+  ZeroExAdapter: "ZeroExAdapter",
+  UniV2SwapAdapter: "ZeroExAdapter",
+  MockSwapRouter: "ZeroExAdapter",
+  MockUSDC: "MockUSDC",
+  MockAERO: "MockAERO",
+};
+
+function findLatestRun() {
+  if (!fs.existsSync(BROADCAST_DIR)) return null;
+  const runLatest = path.join(BROADCAST_DIR, "run-latest.json");
+  if (fs.existsSync(runLatest)) return runLatest;
+  const files = fs
+    .readdirSync(BROADCAST_DIR)
+    .filter((f) => f.startsWith("run-") && f.endsWith(".json"))
+    .sort();
+  return files.length ? path.join(BROADCAST_DIR, files[files.length - 1]) : null;
+}
+
+function main() {
+  const runPath = findLatestRun();
+  if (!runPath) {
+    console.warn(`No broadcast run found for chain ${CHAIN_ID}. Deploy first.`);
+    process.exit(0);
+  }
+
+  const data = JSON.parse(fs.readFileSync(runPath, "utf8"));
+  const entry = { chainId: CHAIN_ID };
+  for (const tx of data.transactions || []) {
+    const field = NAME_TO_FIELD[tx.contractName];
+    if (!field) continue;
+    const addr = tx.contractAddress ? "0x" + tx.contractAddress.replace(/^0x/i, "").toLowerCase() : "";
+    if (addr) entry[field] = addr;
+  }
+
+  const missing = ["DCAVault", "DCAResolver", "ZeroExAdapter", "GasTank"].filter((k) => !entry[k]);
+  if (missing.length) console.warn(`Warning: no address found for ${missing.join(", ")}`);
+
+  for (const outPath of TARGETS) {
+    let existing = {};
+    if (fs.existsSync(outPath)) {
+      try {
+        existing = JSON.parse(fs.readFileSync(outPath, "utf8"));
+      } catch {
+        console.warn(`Could not parse ${outPath}; rewriting.`);
+      }
+    }
+    existing[String(CHAIN_ID)] = { ...existing[String(CHAIN_ID)], ...entry };
+    const ordered = Object.fromEntries(
+      Object.keys(existing)
+        .sort((a, b) => Number(a) - Number(b))
+        .map((k) => [k, existing[k]])
+    );
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, JSON.stringify(ordered, null, 2) + "\n", "utf8");
+    console.log("Wrote", outPath);
+  }
+  console.log(`Chain ${CHAIN_ID}:`, entry);
+}
+
+main();

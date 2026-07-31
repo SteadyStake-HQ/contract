@@ -1,4 +1,4 @@
-.PHONY: help build test test-coverage test-gas deploy-testnet deploy-mainnet format lint clean install
+.PHONY: help build test test-coverage test-gas deploy-testnet deploy-mainnet deploy-bot-testnet deploy-bot-testnet-mock deploy-bot-mainnet format lint clean install
 
 help:
 	@echo "SteadyStake Smart Contracts - Development Commands"
@@ -13,8 +13,11 @@ help:
 	@echo "  make test-gas         Generate gas snapshot"
 	@echo ""
 	@echo "Deployment:"
-	@echo "  make deploy-testnet   Deploy to Base Sepolia"
-	@echo "  make deploy-mainnet   Deploy to Base Mainnet"
+	@echo "  make deploy-testnet     Deploy to Base Sepolia"
+	@echo "  make deploy-mainnet     Deploy to Base Mainnet"
+	@echo "  make deploy-bot-testnet Deploy to BOT Chain testnet (968)"
+	@echo "  make deploy-bot-testnet-mock Deploy to BOT Chain testnet (968) with MockUSDC"
+	@echo "  make deploy-bot-mainnet Deploy to BOT Chain mainnet (677)"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make format           Format code"
@@ -80,6 +83,45 @@ deploy-mainnet:
 		--rpc-url base \
 		--broadcast \
 		--verify
+
+deploy-bot-testnet:
+	@echo "Deploying to BOT Chain testnet (968)..."
+	@if [ -z "$(PRIVATE_KEY)" ]; then \
+		echo "Error: PRIVATE_KEY not set. Set it with: export PRIVATE_KEY=0x..."; \
+		exit 1; \
+	fi
+	@forge script script/Deploy.s.sol:DeployBotTestnet \
+		--rpc-url bot_testnet \
+		--broadcast \
+		--legacy \
+		--verify --verifier blockscout --verifier-url https://scan.bohr.life/api
+	@node scripts/sync-bot-chain.js 968
+
+deploy-bot-testnet-mock:
+	@echo "Deploying to BOT Chain testnet (968) with MockUSDC..."
+	@if [ -z "$(PRIVATE_KEY)" ]; then \
+		echo "Error: PRIVATE_KEY not set. Set it with: export PRIVATE_KEY=0x..."; \
+		exit 1; \
+	fi
+	@forge script script/Deploy.s.sol:DeployBotTestnetWithMockUSDC \
+		--rpc-url bot_testnet \
+		--broadcast \
+		--legacy \
+		--verify --verifier blockscout --verifier-url https://scan.bohr.life/api
+	@node scripts/sync-bot-chain.js 968
+
+deploy-bot-mainnet:
+	@echo "Deploying to BOT Chain mainnet (677)..."
+	@if [ -z "$(PRIVATE_KEY)" ]; then \
+		echo "Error: PRIVATE_KEY not set. Set it with: export PRIVATE_KEY=0x..."; \
+		exit 1; \
+	fi
+	@forge script script/Deploy.s.sol:DeployBotMainnet \
+		--rpc-url bot \
+		--broadcast \
+		--legacy \
+		--verify --verifier blockscout --verifier-url https://scan.botchain.ai/api
+	@node scripts/sync-bot-chain.js 677
 
 check:
 	@echo "Running verification checks..."

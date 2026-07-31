@@ -1,0 +1,78 @@
+{
+  "transactions": [
+    {
+      "contractName": "MockUSDC",
+      "contractAddress": "0x4d92ccb72bc528e3133216ff43e04ab0c28a5dc5",
+      "hash": "0x7212f38fea530c47fd846c2a690812543a349dd12903cdfff1a95ca4de5f71d2",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "MockAERO",
+      "contractAddress": "0xc692f9fe5c03eb9a1db935a47067225cb988c89f",
+      "hash": "0x313eee919f42e50a4276c8e244b680d44bd8c5f0f4ea0469b238405a078cbf64",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "MockSwapRouter",
+      "contractAddress": "0x0459f26fc754d0762b26ed0b9fa5f476455453b2",
+      "hash": "0x6e83cf8caf3df0af1e40839eaeaf7456d6daf0a2acc0ae12b830c0a72adec842",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "DCAVault",
+      "contractAddress": "0xdb561fe13a6516b31c8fcd5cb8b5a4e3fefe43a9",
+      "hash": "0x44781ab1c187da30c79333fae841054c120c21c2ea4d867fea76d2e8917188e8",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "DCAResolver",
+      "contractAddress": "0x441cad85ee6c88a0f1d93628b6faf7d1c3a3bdf0",
+      "hash": "0x76fed5ef14efdf33feb9662ad9959a133087df6e70b789cb1fea839dbf942543",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "GasTank",
+      "contractAddress": "0xda4c87986f4bb210c4affef815e8c1b5addad297",
+      "hash": "0xe96a2959949a3d68dbbb2d14b6fae90476b207b959f0a6d0eb341ef6bbe65fcb",
+      "transactionType": "CREATE"
+    },
+    {
+      "contractName": "gasTank.setGasCostPerExecution(1000)",
+      "hash": "0x1c3a0573ae1bddab7c82707b34a3baa052637ad0df36934605870d6d5a03ad65",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "vault.setGasTank",
+      "hash": "0x64de80ca537ae261970f28912bf858296fd830517377cd079c1bab75c8dc33be",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "vault.setAdditionalAutoPlanFeeUsdc6(10e6)",
+      "hash": "0x0ededd389159deeed70dc55ef42e47a01bc662bc429073d22fa4e1a0c3bfefcc",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "vault.setAutoPlanFeeRecipient",
+      "hash": "0x7b2208b9b99afe8648635c9466a3cfd22750aad150e2abd4ee6844423389c6a4",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "usdc.mint(deployer, 10000e6)",
+      "hash": "0x779a3414a0c5a52b00abca059c2d831b9444bd410e3d9c18334e026d278d3d64",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "aero.mint(deployer, 10000e18)",
+      "hash": "0x35e86551bbe169cd5333b817b75ba45dbe2d5b89044117dfd6484a4e07c44439",
+      "transactionType": "CALL"
+    },
+    {
+      "contractName": "aero.mint(router, 100000e18)",
+      "hash": "0x7542610110b4814bd21433441e0cee6ad78cacb811f52879749efde8c3c4a853",
+      "transactionType": "CALL"
+    }
+  ],
+  "chain": 968,
+  "commit": "viem-deploy",
+  "timestamp": 1784703974
+}

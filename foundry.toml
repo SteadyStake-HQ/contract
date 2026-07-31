@@ -31,8 +31,11 @@ eth_sepolia = "https://rpc.sepolia.org"
 eth_sepolia_publicnode = "https://ethereum-sepolia-rpc.publicnode.com"
 bnb = "https://bsc-dataseed.binance.org"
 kava = "https://evm.kava.io"
-polygon = "https://polygon-rpc.com"
+polygon = "https://polygon-bor-rpc.publicnode.com"
 sonic = "https://rpc.soniclabs.com"
+# BOT Chain (EVM, Parlia/BSC-derived). Docs: https://dev-docs.botchain.ai/docs/Developers/json-rpc-endpoint/
+bot = "https://rpc.botchain.ai"
+bot_testnet = "https://rpc.bohr.life"
 # Qubic testnet (non-EVM; for reference / future Qubic tooling). See contracts/QUBIC_TESTNET.md
 qubic_testnet = "https://testnet-rpc.qubic.org"
 
@@ -45,3 +48,7 @@ bsc = { key = "${BSCSCAN_API_KEY}" }
 kava = { key = "${KAVASCAN_API_KEY}", url = "https://api.verify.mintscan.io/evm/api/0x8ae" }
 polygon = { key = "${POLYGONSCAN_API_KEY}" }
 sonic = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=146" }
+# BOT Chain runs Blockscout; the key is unused but must be non-empty.
+# Verify with: --verifier blockscout --verifier-url https://scan.botchain.ai/api
+bot = { key = "${BOTSCAN_API_KEY}", chain = 677, url = "https://scan.botchain.ai/api" }
+bot_testnet = { key = "${BOTSCAN_API_KEY}", chain = 968, url = "https://scan.bohr.life/api" }

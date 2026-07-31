@@ -231,10 +231,20 @@ contract ZeroExAdapter {
         );
         IERC20(USDC).approve(ZERO_EX_ROUTER, amountIn);
 
-        (bool success, bytes memory result) = ZERO_EX_ROUTER.call(swapData);
+        // Measure the actual tokenOut delta rather than decoding the router's return value.
+        // 0x Swap API v2 routes through AllowanceHolder.exec(), whose return type is `bytes`,
+        // so abi.decode(result, (uint256)) would read the ABI head (0x20 = 32) instead of the
+        // fill amount and forward 32 wei to the user. Balance delta is router-agnostic and
+        // also covers routers that return nothing at all.
+        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
+
+        (bool success, ) = ZERO_EX_ROUTER.call(swapData);
         require(success, "0x swap failed");
 
-        amountOut = abi.decode(result, (uint256));
+        amountOut = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+        // A call to an address with no code returns success with no state change. Without this
+        // guard that path would look like a 0-output swap and silently consume the user's USDC.
+        require(amountOut > 0, "No output received");
         require(amountOut >= minAmountOut, "Insufficient output amount");
 
         require(

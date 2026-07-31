@@ -70,7 +70,7 @@ contract DCAVault is ERC20, ReentrancyGuard, Ownable, Pausable {
     struct DCASchedule {
         address targetToken;
         DCAFrequency frequency;
-        uint256 amountPerInterval; // in USDC 6 decimals
+        uint256 amountPerInterval; // in settlement-stablecoin base units (6 dec, 18 on BNB Chain)
         uint256 lastExecutionTime;
         uint256 totalAmount;
         uint256 executedCount;
@@ -85,6 +85,14 @@ contract DCAVault is ERC20, ReentrancyGuard, Ownable, Pausable {
 
     // ============ State Variables ============
     IERC20 public usdc;
+    /**
+     * @notice Largest totalAmount a single schedule may hold, in settlement-token base units.
+     * @dev Equivalent to 10,000,000 whole tokens, scaled by the stablecoin's own decimals rather
+     *      than a hardcoded 1e6. The literal `10_000_000e6` this replaces silently became a
+     *      $0.00001 cap on chains whose stablecoin has 18 decimals (BNB Chain's Binance-Peg USDC),
+     *      which rejected every realistic deposit.
+     */
+    uint256 public immutable maxTotalDeposit;
     ISwapRouter public swapRouter;
     /// @notice Optional GasTank for createScheduleAndEnrollWithGas (fund user gas in same tx). Set by owner.
     address public gasTank;
@@ -155,6 +163,9 @@ contract DCAVault is ERC20, ReentrancyGuard, Ownable, Pausable {
         require(_usdc != address(0), "Invalid USDC address");
         swapRouter = ISwapRouter(_swapRouter);
         usdc = IERC20(_usdc);
+        // Reverts the deploy if the settlement token has no decimals() — deliberately fatal, since
+        // guessing here would mis-scale every deposit limit on the chain.
+        maxTotalDeposit = 10_000_000 * (10 ** IERC20(_usdc).decimals());
 
         IERC20(_usdc).approve(_swapRouter, type(uint256).max);
     }
@@ -210,7 +221,7 @@ contract DCAVault is ERC20, ReentrancyGuard, Ownable, Pausable {
             totalAmount >= amountPerInterval,
             "Total must be >= interval amount"
         );
-        require(totalAmount <= 10_000_000e6, "Amount too large"); // 10M USDC max
+        require(totalAmount <= maxTotalDeposit, "Amount too large"); // 10M tokens max
 
         // Transfer USDC from user to vault
         require(
@@ -266,7 +277,7 @@ contract DCAVault is ERC20, ReentrancyGuard, Ownable, Pausable {
             totalAmount >= amountPerInterval,
             "Total must be >= interval amount"
         );
-        require(totalAmount <= 10_000_000e6, "Amount too large"); // 10M USDC max
+        require(totalAmount <= maxTotalDeposit, "Amount too large"); // 10M tokens max
         require(enrolledCount[msg.sender] == 0, "Use createSchedule then enroll for extra plan");
 
         uint256 pullAmount = totalAmount + gasAmountForTank;
