@@ -6,8 +6,8 @@ import {StablecoinGamePassCheckout} from "../src/StablecoinGamePassCheckout.sol"
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
- * @notice Deploys one StablecoinGamePassCheckout for a payment network and seeds the three
- *         beta pass plans (§5.1), priced in the stablecoin's own decimals.
+ * @notice Deploys one StablecoinGamePassCheckout for a payment network and seeds the beta pass
+ *         plans (§5.1), priced in the stablecoin's own decimals.
  *
  * @dev    Testnet-first. Required env:
  *           PRIVATE_KEY        deployer key
@@ -18,12 +18,20 @@ import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/exten
  *                              seed plans in one broadcast. On mainnet, set it to the multisig and
  *                              re-grant/revoke admin afterwards (§24).
  *
- *         Plan ids: 1 = Day (24h/$0.99), 2 = Week (7d/$3.99), 3 = Month (30d/$9.99).
+ *         Plan ids: 1 = Day (24h/$0.99), 2 = Week (7d/$3.99), 3 = Month (30d/$9.99),
+ *         4 = Hour (1h/$0.01, test only).
+ *
+ *         These must stay identical to PASS_PLANS in backend/src/payments/pass-plans.ts. The pass
+ *         indexer activates a pass only when the PassPaid `amount` equals the amount the backend
+ *         computed for the intent, so a price that differs here by one atomic unit takes the
+ *         player's stablecoin and grants nothing.
  */
 contract DeployGamePassCheckout is Script {
     uint8 internal constant PLAN_DAY = 1;
     uint8 internal constant PLAN_WEEK = 2;
     uint8 internal constant PLAN_MONTH = 3;
+    /// Test tier — see the warning on PASS_PLANS. Drop this before a player-facing deployment.
+    uint8 internal constant PLAN_HOUR = 4;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -43,6 +51,7 @@ contract DeployGamePassCheckout is Script {
         uint256 dayPrice = 99 * unit; // $0.99
         uint256 weekPrice = 399 * unit; // $3.99
         uint256 monthPrice = 999 * unit; // $9.99
+        uint256 hourPrice = 1 * unit; // $0.01 — test tier
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -54,6 +63,7 @@ contract DeployGamePassCheckout is Script {
             checkout.setPlan(PLAN_DAY, 1 days, dayPrice, true);
             checkout.setPlan(PLAN_WEEK, 7 days, weekPrice, true);
             checkout.setPlan(PLAN_MONTH, 30 days, monthPrice, true);
+            checkout.setPlan(PLAN_HOUR, 1 hours, hourPrice, true);
         }
 
         vm.stopBroadcast();
