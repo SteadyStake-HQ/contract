@@ -77,6 +77,81 @@ contract MockToken is ERC20, Ownable {
 }
 
 /**
+ * @title MockUSDT
+ * @notice USDT-style token whose transfer/approve/transferFrom return NOTHING, the way
+ *         the real Tether contract does. Used to prove the checkout works through
+ *         SafeERC20 against a non-standard token (blueprint §18.4).
+ */
+contract MockUSDT {
+    string public constant name = "Tether USD";
+    string public constant symbol = "USDT";
+    uint8 public constant decimals = 6;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    // Deliberately no return value.
+    function approve(address spender, uint256 amount) external {
+        allowance[msg.sender][spender] = amount;
+    }
+
+    function transfer(address to, uint256 amount) external {
+        _transfer(msg.sender, to, amount);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external {
+        uint256 allowed = allowance[from][msg.sender];
+        require(allowed >= amount, "USDT: allowance");
+        if (allowed != type(uint256).max) {
+            allowance[from][msg.sender] = allowed - amount;
+        }
+        _transfer(from, to, amount);
+    }
+
+    function _transfer(address from, address to, uint256 amount) internal {
+        require(balanceOf[from] >= amount, "USDT: balance");
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+    }
+}
+
+/**
+ * @title MockFeeToken
+ * @notice ERC20 that skims a fee on every wallet-to-wallet transfer, so the receiver gets
+ *         less than the amount sent. Used to prove the checkout's treasury balance-delta
+ *         check rejects fee-on-transfer tokens (blueprint §18.4).
+ */
+contract MockFeeToken is ERC20 {
+    uint256 public immutable feeBps; // 1 = 0.01%
+    address public constant FEE_SINK = address(0xFEE);
+    bool private _inFee;
+
+    constructor(uint256 feeBps_) ERC20("Fee Token", "FEE") {
+        feeBps = feeBps_;
+    }
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (!_inFee && from != address(0) && to != address(0) && feeBps > 0) {
+            uint256 fee = (value * feeBps) / 10000;
+            _inFee = true;
+            super._update(from, FEE_SINK, fee);
+            super._update(from, to, value - fee);
+            _inFee = false;
+        } else {
+            super._update(from, to, value);
+        }
+    }
+}
+
+/**
  * @title MockAERO
  * @notice Mock AERO token (Aerodrome)
  */
