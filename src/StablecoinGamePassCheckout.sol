@@ -106,6 +106,13 @@ contract StablecoinGamePassCheckout is AccessControl, Pausable, ReentrancyGuard 
      *         reads balances rather than a return value — it tolerates the non-standard
      *         return behaviour of tokens like USDT (§18.4).
      *
+     *         One consequence worth stating: the treasury can never buy a pass from itself.
+     *         A transfer from the treasury to the treasury moves no balance, so the delta is
+     *         zero and this reverts with UnexpectedAmountReceived(price, 0). That is correct
+     *         — the payment genuinely did not happen — but it means the treasury must be an
+     *         address that never plays, which §24 wants anyway for keeping payment capital
+     *         apart from the DCA vault and gas tank.
+     *
      * @param planId     Which pass plan.
      * @param purchaseId Backend-issued id binding this payment to one intent. Single-use.
      */

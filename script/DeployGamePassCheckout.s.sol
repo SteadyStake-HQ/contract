@@ -30,8 +30,7 @@ contract DeployGamePassCheckout is Script {
     uint8 internal constant PLAN_DAY = 1;
     uint8 internal constant PLAN_WEEK = 2;
     uint8 internal constant PLAN_MONTH = 3;
-    /// Test tier — see the warning on PASS_PLANS. Drop this before a player-facing deployment.
-    uint8 internal constant PLAN_HOUR = 4;
+    /// Id 4 is retired: it was a $0.01 1-Hour test tier, removed from PASS_PLANS. Do not reuse it.
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -51,7 +50,6 @@ contract DeployGamePassCheckout is Script {
         uint256 dayPrice = 99 * unit; // $0.99
         uint256 weekPrice = 399 * unit; // $3.99
         uint256 monthPrice = 999 * unit; // $9.99
-        uint256 hourPrice = 1 * unit; // $0.01 — test tier
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -63,7 +61,6 @@ contract DeployGamePassCheckout is Script {
             checkout.setPlan(PLAN_DAY, 1 days, dayPrice, true);
             checkout.setPlan(PLAN_WEEK, 7 days, weekPrice, true);
             checkout.setPlan(PLAN_MONTH, 30 days, monthPrice, true);
-            checkout.setPlan(PLAN_HOUR, 1 hours, hourPrice, true);
         }
 
         vm.stopBroadcast();
