@@ -81,6 +81,29 @@ forge script script/DeployCapacityVerifier.s.sol --rpc-url base --broadcast
 
 ---
 
+## After deploying: sync the addresses into the backend
+
+Deploys record their addresses in `contracts/deployed-game-contracts.json`. That file is **not
+enough on its own** — `backend/` and `contracts/` are separate git repos, so Railway builds the
+backend without any sibling `contracts/` directory. A backend that cannot find the file reports
+every chain as "no game contracts deployed", silently, on all four consumers: the networks
+dashboard, the balances page, the capacity permit signer, and the `payment_networks` boot seed.
+
+So after every game deploy:
+
+```bash
+cd backend
+pnpm run sync:game-contracts   # copies contracts/deployed-game-contracts.json -> backend/
+git add deployed-game-contracts.json && git commit -m "sync game contract addresses"
+```
+
+`pnpm run check:game-contracts` exits non-zero when the backend copy is stale — use it in CI.
+
+The backend prefers the sibling `contracts/` file when one exists, so a local redeploy shows the new
+addresses immediately; the committed copy is the fallback that production actually reads. Nothing
+needs to change in `frontend/` or the game: both read the checkout address from the backend API
+(`/api/pass/options`), never from a file.
+
 ## Testing
 
 ```bash
