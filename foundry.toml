@@ -11,6 +11,26 @@ remappings = [
     "openzeppelin-contracts/=lib/openzeppelin-contracts/"
 ]
 
+# The optimizer is enabled ONLY for the new $SS4 suite (src/sale/ and src/token/). Every
+# other contract in this repo still compiles with the exact settings its already-deployed
+# and already-verified bytecode was produced with, so this cannot invalidate a live
+# verification. SS4Presale needs it: unoptimized it lands 51 bytes over the EIP-170
+# runtime limit, and a sale contract facing an audit needs real headroom, not 24 bytes.
+#
+# src/token/ is listed explicitly even though SS4Token fits either way. DeploySS4.s.sol
+# imports both contracts, so the token is pulled into the sale's compilation unit and is
+# optimized regardless; naming it here makes that deterministic rather than an artifact of
+# which script happens to import what. Verification must use --compilation-profile
+# ss4-optimized for BOTH contracts.
+[[profile.default.additional_compiler_profiles]]
+name = "ss4-optimized"
+optimizer = true
+optimizer_runs = 200
+
+[[profile.default.compilation_restrictions]]
+paths = "src/{sale,token}/**"
+min_optimizer_runs = 200
+
 [profile.default.fuzz]
 runs = 256
 
