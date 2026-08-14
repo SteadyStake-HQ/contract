@@ -1,4 +1,4 @@
-.PHONY: help build test test-coverage test-gas deploy-testnet deploy-mainnet deploy-bot-testnet deploy-bot-testnet-mock deploy-bot-mainnet format lint clean install
+.PHONY: help build test test-coverage test-gas deploy-testnet deploy-mainnet deploy-bot-testnet deploy-bot-testnet-mock deploy-bot-mainnet deploy-ss4-presale-v2-bot-testnet deploy-ss4-presale-v2-dry-run format lint clean install
 
 help:
 	@echo "SteadyStake Smart Contracts - Development Commands"
@@ -18,6 +18,8 @@ help:
 	@echo "  make deploy-bot-testnet Deploy to BOT Chain testnet (968)"
 	@echo "  make deploy-bot-testnet-mock Deploy to BOT Chain testnet (968) with MockUSDC"
 	@echo "  make deploy-bot-mainnet Deploy to BOT Chain mainnet (677)"
+	@echo "  make deploy-ss4-presale-v2-bot-testnet  Deploy SS4PresaleV2 (campaign sale) to 968"
+	@echo "  make deploy-ss4-presale-v2-dry-run      Validate the SS4PresaleV2 plan, no broadcast"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make format           Format code"
@@ -96,6 +98,34 @@ deploy-bot-testnet:
 		--legacy \
 		--verify --verifier blockscout --verifier-url https://scan.bohr.life/api
 	@node scripts/sync-bot-chain.js 968
+
+# The campaign sale. Unlike deploy-bot-testnet this deploys ONLY the presale: `$$SS4` has a
+# fixed supply minted once, so re-running the token deploy would create a second, unrelated
+# supply and orphan every balance already on chain. SS4_TOKEN_ADDRESS is therefore required.
+deploy-ss4-presale-v2-bot-testnet:
+	@echo "Deploying SS4PresaleV2 to BOT Chain testnet (968)..."
+	@if [ -z "$(PRIVATE_KEY)" ]; then \
+		echo "Error: PRIVATE_KEY not set. Set it with: export PRIVATE_KEY=0x..."; \
+		exit 1; \
+	fi
+	@if [ -z "$(SS4_TOKEN_ADDRESS)" ] || [ -z "$(SS4_CAMPAIGN_SIGNER)" ]; then \
+		echo "Error: SS4_TOKEN_ADDRESS and SS4_CAMPAIGN_SIGNER must both be set."; \
+		echo "See the header of script/DeploySS4PresaleV2.s.sol for the full env list."; \
+		exit 1; \
+	fi
+	@forge script script/DeploySS4PresaleV2.s.sol:DeploySS4PresaleV2 \
+		--rpc-url bot_testnet \
+		--broadcast \
+		--legacy \
+		--slow \
+		--verify --verifier blockscout --verifier-url https://scan.bohr.life/api
+	@echo "Now record the address in deployed-ss4-contracts.json and run"
+	@echo "  (cd ../backend && node scripts/sync-ss4-contracts.mjs)"
+
+# Print the plan and every validation check without broadcasting (§28.5).
+deploy-ss4-presale-v2-dry-run:
+	@DRY_RUN=true forge script script/DeploySS4PresaleV2.s.sol:DeploySS4PresaleV2 \
+		--rpc-url bot_testnet --legacy
 
 deploy-bot-testnet-mock:
 	@echo "Deploying to BOT Chain testnet (968) with MockUSDC..."
