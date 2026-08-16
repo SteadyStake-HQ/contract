@@ -63,10 +63,10 @@ contract SS4PresaleTest is Test {
     address internal buyer2 = makeAddr("buyer2");
     address internal outsider = makeAddr("outsider");
 
-    // §7.2 recommended interpretation of the 17–30 August 2026 sale window.
-    uint64 internal constant SALE_START = 1_786_924_800; // 2026-08-17T00:00:00Z
-    uint64 internal constant SALE_END = 1_788_134_400; // 2026-08-31T00:00:00Z, exclusive
-    uint64 internal constant CLAIM_START = 1_788_220_800; // 2026-09-01T00:00:00Z
+    // §7.2 recommended interpretation of the 20 August – 2 September 2026 sale window.
+    uint64 internal constant SALE_START = 1_787_184_000; // 2026-08-20T00:00:00Z
+    uint64 internal constant SALE_END = 1_788_393_600; // 2026-09-03T00:00:00Z, exclusive
+    uint64 internal constant CLAIM_START = 1_788_480_000; // 2026-09-04T00:00:00Z
 
     // Illustrative test economics only — every one of these is a §29 deployment blocker.
     uint256 internal constant PRICE_USD_E6 = 25_000; // $0.025 per SS4

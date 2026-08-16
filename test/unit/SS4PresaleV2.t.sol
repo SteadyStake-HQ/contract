@@ -29,9 +29,9 @@ contract SS4PresaleV2Test is Test {
     uint256 internal signerKey = 0xA11CE;
     address internal signer;
 
-    uint64 internal constant SALE_START = 1_786_924_800; // 2026-08-17T00:00:00Z
-    uint64 internal constant SALE_END = 1_788_134_400; // 2026-08-31T00:00:00Z, exclusive
-    uint64 internal constant CLAIM_START = 1_788_220_800; // 2026-09-01T00:00:00Z
+    uint64 internal constant SALE_START = 1_787_184_000; // 2026-08-20T00:00:00Z
+    uint64 internal constant SALE_END = 1_788_393_600; // 2026-09-03T00:00:00Z, exclusive
+    uint64 internal constant CLAIM_START = 1_788_480_000; // 2026-09-04T00:00:00Z
 
     uint256 internal constant PRICE_USD_E6 = 25_000; // $0.025 per SS4
     uint256 internal constant ALLOCATION = 20_000_000e18;
