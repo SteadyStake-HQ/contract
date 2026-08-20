@@ -64,7 +64,6 @@ import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/exten
  *           SS4_TGE_BPS             default 10000 (full unlock, no vesting)
  *           SS4_MIN_BUY_USD_E6      default 0
  *           SS4_WALLET_CAP_USD_E6   default 0 (uncapped)
- *           SS4_SOFT_CAP_USD_E6     default 0
  *           SS4_ADMIN               default deployer
  *           DRY_RUN                 "true" to simulate without broadcasting (§28.5)
  */
@@ -73,6 +72,9 @@ contract DeploySS4Mainnet is Script {
 
     /// @dev The campaign the spec publishes: +5.50% maximum across its three sections.
     uint16 internal constant DEFAULT_MAX_BOOST_BPS = 550;
+
+    /// @dev Production cancellation threshold: $444 expressed with six USD decimals.
+    uint256 internal constant PRODUCTION_SOFT_CAP_USD_E6 = 444e6;
 
     struct Params {
         string name;
@@ -229,7 +231,9 @@ contract DeploySS4Mainnet is Script {
         p.tgeBps = uint16(vm.envOr("SS4_TGE_BPS", uint256(10_000)));
         p.minBuyUsdE6 = vm.envOr("SS4_MIN_BUY_USD_E6", uint256(0));
         p.walletCapUsdE6 = vm.envOr("SS4_WALLET_CAP_USD_E6", uint256(0));
-        p.softCapUsdE6 = vm.envOr("SS4_SOFT_CAP_USD_E6", uint256(0));
+        // A production term, not an environment override: keeping it in the script prevents a
+        // stale shell value from silently restoring the superseded $16,000 threshold.
+        p.softCapUsdE6 = PRODUCTION_SOFT_CAP_USD_E6;
 
         // The sale must fit inside the Investors pool it is carved from (§3.2). Both pools come out
         // of that 15%, so the campaign reserve counts against it too.
